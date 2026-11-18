@@ -16,8 +16,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.10.2
-      - run: gradle build --no-daemon
+      - name: Proje klasorunu bul
+        run: |
+          F=$(find . -name settings.gradle -not -path './.git/*' | head -n 1)
+          if [ -z "$F" ]; then
+            echo "HATA: settings.gradle repoda yok. Dosyalar yuklenmemis veya zip olarak yuklenmis."
+            find . -not -path './.git/*' | head -50
+            exit 1
+          fi
+          echo "PROJECT_DIR=$(dirname "$F")" >> $GITHUB_ENV
+      - run: gradle build --no-daemon -p "$PROJECT_DIR"
       - uses: actions/upload-artifact@v4
         with:
           name: nursultan-client
-          path: build/libs/*.jar
+          path: ${{ env.PROJECT_DIR }}/build/libs/*.jar
